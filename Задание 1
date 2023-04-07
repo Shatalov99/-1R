@@ -1,0 +1,265 @@
+#Шаталов Илья Зурабович – регион 25
+#урожайность пшеницы в 2003 году, взяв для рассчета средние 
+#суммы активных температур за предыдущие 12 лет, 
+#с метеостанций на расстоянии от 90 до 180 км.
+
+rm(список=ls())
+
+библиотека (rnoaa)
+библиотека(dplyr)
+библиотека (ggplot2)
+библиотека (tidyverse)
+библиотека (lubridate)
+
+setwd("D:/MathMod ")
+
+= station_data read.csv("station_data.csv")
+#Получаем список станций ближайших к городу Владивосток,создав таблицу с именем региона и координатами его столицы
+data.frame = Vladivostok(id = "ВЛАДИВОСТОК", широта = 43.162835, долгота = 131.932465)
+= Vladivostok_round meteo_nearby_stations(lat_lon_df = Владивосток, station_data = station_data,
+                                 = var c("PRCP", "TAVG"),
+                                 1991 = year_min, year_max = 2003)
+Vladivostok_around = Vladivostok_table[[1]]]
+= Vladivostok_table фильтр (Vladivostok_table, расстояние =>90, расстояние <= 180)
+
+Vladivostok_around = Vladivostok_id1[["ВЛАДИВОСТОК"]][["идентификатор"]][[1]]
+
+улица (во Владивостоке в обход)
+= all_Vladivostok_data meteo_tidy_ghcnd(идентификатор станции = Vladivostok_id1)
+#Чтобы получить таблицу всех метеостанций вокруг Владивостока нужно выбрать целиком первый объект из списка
+Vladivostok_around = Vladivostok_table[[1]]]
+резюме (Vladivostok_table)
+#Создаем цикл, в котором бы скачивались нужные данные
+#для всех метеостанций из созданного списка
+#Создадим промежуточный объект, куда будем скачивать данные
+#с конкретной метеостанции
+data.frame = all_i()
+#Создадим объект, куда скачаем все данные всех метеостанций
+data.frame = all_Vladivostok()
+#Цикл для всех метеостанций
+для(i в 1:2) 
+{all_i = meteo_tidy_ghcnd(stationid = Vladivostok_arround[["ВЛАДИВОСТОК"]][["идентификатор"]][i])
+all_i = all_i[ ,c("идентификатор","дата","tavg")] 
+печать (all_i)
+=all_Vladivostokrbind(all_Vladivostok, all_i)}
+#Рассчитаем среднюю сумму активных температур для двух метеостанций Амурской области
+all_Vladivostok = Vladivostok_data %>% 
+ мутировать(дата=ymd(дата),
+         =годyear(дата),
+         =месяцмесяц(дата)) %>%
+ мутировать(tavg=случай_, когда( tavg<50 ~ 0, ИСТИНА ~ tavg)/10) %>% 
+ фильтр (год>1990 и год < 2004) %>% 
+ group_by(идентификатор,год,месяц) %>% 
+ суммировать(tsum = sum(tavg,na.rm=TRUE)) %>% 
+ мутировать(tsum=case_when(tsum==NA~0, TRUE ~ tsum)) %>% разгруппировать() %>% 
+ group_by(месяц) %>% суммировать(St = среднее (tsum))
+
+=afic(0.00,0.00,0.00,32.11,26.31,25.64,32.20,18.73,
+      16.30,13.83,0.00,0.00)
+=bfic(0.00,0.00,0.00,11.30,9.26,9.03,8.16,6.59,5.73,
+      4.87,0.00,0.00)
+=dic(0.00,0.00,0.00,0.33,1.00,1.00,1.00,0.32,0.00,
+     0.00,0.00,0.00)
+
+y=1.0
+Kf=300
+Qj=1600
+Жж=2.2
+Ej=25
+#Рассчитаем урожайность по месяцам
+Vladivostok_data = Vladivostok_data %>% 
+ мутировать(Fi=(afi)+(bfi)*y*(Vladivostok_data$St))
+Vladivostok_data = Vladivostok_data %>% мутировать(Yj=(((Vladivostok_data$Fi)*(di)*Kf)/(Qj*Lj*(100-Ej))))
+#Расчитываем суммарную урожайность как сумму по месяцам
+=ДОХОДНОСТИ(Vladivostok_data$Yj);ДОХОДНОСТЬ
+# Ответ: 11.99 ц/га
+ 187  
+Задание 2.R
+@@ -0,0 +1,187 @@
+#Мещерякова Екатерина Анатольевна — создайте модель множественной линейной регрессии
+#дневных потоков углекислого газа за летний период 2013 года
+#по данным измерений методом турбулентной пульсации
+
+rm(список=ls())
+библиотека ("tidyverse") 
+библиотека ("readr") 
+библиотека ("stringr") 
+библиотека ("dplyr") 
+библиотека ("ggplot2") 
+библиотека ("tidyr")
+библиотека ("stringr")
+библиотека ("lubridate")
+
+# Считываем файл 
+#Пропускаем первую строку,заменяем все
+#не числовые значения на NA, игнорируя строчки с символом "["
+
+= tbl read_csv("eddypro.csv", пропустить = 1, na =c("","NA","-9999","-9999.0"), комментарий=c("["))
+
+#Подготовка к анализу
+tbl = tbl[-1,]; tbl
+= tbl выбрать(tbl, -(бросок))
+tbl = tbl %>% mutate_if(это.символ, фактор)
+имена (табл) = имена (табл) %>% 
+ str_replace_all("[!]","_emph_") %>% 
+ str_replace_all("[?]","_quest_") %>% 
+  str_replace_all("[*]","_star_") %>% 
+  str_replace_all("[+]","_plus_") %>%
+  str_replace_all("[-]","_minus_") %>%
+  str_replace_all("[@]","_at_") %>%
+  str_replace_all("[$]","_dollar_") %>%
+  str_replace_all("[#]","_hash_") %>%
+  str_replace_all("[/]","_div_") %>%
+  str_replace_all("[%]","_perc_") %>%
+  str_replace_all("[&]","_amp_") %>%
+  str_replace_all("[\\^]","_power_") %>%
+  str_replace_all("[()]","_") 
+glimpse(tbl)
+#Отфильтруем данные для своего варианта
+tbl = filter(tbl,DOY >= 152 & DOY <= 243)
+tbl = filter(tbl, daytime ==TRUE)
+
+#Проведем корелляционный анализ
+tbl_numeric = tbl[,sapply(tbl,is.numeric) ]
+cor_td = cor(drop_na(tbl_numeric), method = "spearman") %>% as.data.frame %>% select(co2_flux)
+vars = row.names(cor_td)[cor_td$co2_flux^2 > 0.2] %>% na.exclude
+
+formula = as.formula(paste("co2_flux~", paste(vars,collapse = "+"), sep=""));formula
+
+row_numbers = 1:length(tbl_numeric$co2_flux)
+teach = sample(row_numbers, floor(length(tbl_numeric$co2_flux)*.7))
+test = row_numbers[-teach]
+
+teaching_tbl = tbl_numeric[teach,]
+testing_tbl = tbl_numeric[test,]
+#Создадим модели и проведем их анализ для получения наиболее оптимальной
+model0=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov + w_div_co2_cov + co2...125 + co2...127), data = teaching_tbl)
+
+coef(model0)
+resid(model0)
+confint(model0)
+summary(model0)
+anova(model0)
+
+model1=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov + co2...125), data = teaching_tbl)
+coef(model1)
+resid(model1)
+confint(model1)
+summary(model1)
+anova(model1)
+anova(model0, model1)
+
+model2=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov + co2...125)^3, data = teaching_tbl)
+coef(model2)
+resid(model2)
+confint(model2)
+summary(model2)
+anova(model2)
+anova(model1, model2)
+
+model3=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov + co2...125)^2, data = teaching_tbl)
+coef(model3)
+resid(model3)
+confint(model3)
+summary(model3)
+anova(model3)
+anova(model2, model3)
+
+model4=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov)^2 - H:co2_molar_density - H:w_div_ts_cov - rand_err_co2_flux:co2_mole_fraction -
+            rand_err_co2_flux:un_H - rand_err_co2_flux:un_co2_flux - rand_err_co2_flux:w_div_ts_cov - 
+            co2_molar_density:co2_mole_fraction - co2_molar_density:un_H - co2_molar_density:un_co2_flux - co2_molar_density:w_div_ts_cov - 
+            co2_molar_density:co2...125 - co2_mole_fraction:co2_mixing_ratio - co2_mole_fraction:un_H - co2_mole_fraction:un_co2_flux - 
+            co2_mole_fraction:w_div_ts_cov - co2_mole_fraction:co2...125 - co2_mixing_ratio:T_star_ - 
+            co2_mixing_ratio:un_H - co2_mixing_ratio:un_co2_flux - co2_mixing_ratio:w_div_ts_cov - co2_mixing_ratio:co2...125 - 
+            T_star_:co2...125 - un_H:w_div_ts_cov - un_co2_flux:w_div_ts_cov - un_co2_flux:co2...125 - 
+            w_div_ts_cov:co2...125, data = teaching_tbl)
+coef(model4)
+resid(model4)
+confint(model4)
+summary(model4)
+anova(model4)
+anova(model3, model4)
+
+model5=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov)^2 - H:молярная плотность co2    -,,
+            rand_err_co2_flux:un_H - rand_err_co2_flux:un_co2_flux - rand_err_co2_flux:w_div_ts_cov - rand_err_co2_flux:co2_mixing_ratio - 
+            молярная плотностьco2    un_H - co2_molar_density:un_co2_flux - co2_molar_density:w_div_ts_cov  - 
+            молярная плотностьco2       -,,, 
+            co2_mole_fraction:w_div_ts_cov - co2_mole_fraction:T_star_  - co2_mole_fraction:co2...125 - co2_mixing_ratio:T_star_ - T_star_:w_div_ts_cov 
+            коэффициент смешивания co2:un_H - коэффициент смешивания co2:un_co2_flux - коэффициент смешивания co2:w_div_ts_cov - коэффициент смешивания co2:co2...125 - 
+            T_star_:co2...125 - un_H:un_co2_flux - un_H:w_div_ts_cov - un_co2_flux:w_div_ts_cov - un_co2_flux:co2...125 - 
+            co2...125:w_div_ts_cov, данные = teaching_tbl)
+коэффициент (модель 5)
+остаток (модель 5)
+ограничиться (модель 5)
+резюме (модель 5)
+anova(модель 5)
+anova(модель 4, модель 5)
+
+
+=модель 6лм(поток  ~ (      +,, 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov)^2 - H:молярная плотность co2      -,,,
+            H:un_co2_flux - rand_err_co2_flux:co2_mole_fraction -
+            rand_err_co2_flux:un_H - rand_err_co2_flux:un_co2_flux - rand_err_co2_flux:w_div_ts_cov - rand_err_co2_flux:co2_mixing_ratio - 
+            молярная плотностьco2    un_H - co2_molar_density:un_co2_flux - co2_molar_density:w_div_ts_cov  - 
+            молярная плотностьco2       -,,, 
+            co2_mole_fraction:w_div_ts_cov - co2_mole_fraction:T_star_  - co2_mole_fraction:co2...125 - co2_mixing_ratio:T_star_ - T_star_:w_div_ts_cov 
+            co2_mixing_ratio:un_H - co2_mixing_ratio:un_co2_flux - co2_mixing_ratio:w_div_ts_cov - co2_mixing_ratio:co2...125 - 
+            T_star_:co2...125 - un_H:un_co2_flux - un_H:w_div_ts_cov - un_co2_flux:w_div_ts_cov - un_co2_flux:co2...125 - 
+            w_div_ts_cov:co2...125, data = teaching_tbl)
+coef(model6)
+resid(model6)
+confint(model6)
+summary(model6)
+anova(model6)
+anova(model5, model6)
+
+model7=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov)^2 - H:co2_molar_density - H:rand_err_co2_flux - H:w_div_ts_cov - H:co2_mole_fraction -
+            H:un_co2_flux - H:co2_mixing_ratio - rand_err_co2_flux:co2_mole_fraction -
+            rand_err_co2_flux:un_H - rand_err_co2_flux:un_co2_flux - rand_err_co2_flux:w_div_ts_cov - rand_err_co2_flux:co2_mixing_ratio - 
+            co2_molar_density:co2_mole_fraction - co2_molar_density:co2_mixing_ratio - co2_molar_density:un_H - co2_molar_density:un_co2_flux - co2_molar_density:w_div_ts_cov - 
+            co2_molar_density:co2...125 - co2_mole_fraction:co2_mixing_ratio - co2_mole_fraction:un_H - co2_mole_fraction:un_co2_flux - 
+            co2_mole_fraction:w_div_ts_cov - co2_mole_fraction:T_star_  - co2_mole_fraction:co2...125 - co2_mixing_ratio:T_star_ - T_star_:w_div_ts_cov -
+            co2_mixing_ratio:un_H - co2_mixing_ratio:un_co2_flux - co2_mixing_ratio:w_div_ts_cov - co2_mixing_ratio:co2...125 - 
+            T_star_:co2...125 - un_H:un_co2_flux - un_H:w_div_ts_cov - un_co2_flux:w_div_ts_cov - un_co2_flux:co2...125 - 
+            w_div_ts_cov:co2...125, data = teaching_tbl)
+coef(model7)
+resid(model7)
+confint(model7)
+summary(model7)
+anova(model7)
+anova(model6, model7)
+
+model8=lm(co2_flux ~ (H  + rand_err_co2_flux + co2_molar_density + 
+                        co2_mole_fraction + co2_mixing_ratio + T_star_ + un_H + un_co2_flux + 
+                        w_div_ts_cov)^2 - H:co2_molar_density - H:rand_err_co2_flux - H:w_div_ts_cov - H:co2_mole_fraction -
+            H:un_co2_flux - H:co2_mixing_ratio - rand_err_co2_flux:co2_mole_fraction -
+            rand_err_co2_flux:un_H - rand_err_co2_flux:un_co2_flux - rand_err_co2_flux:co2_molar_density - rand_err_co2_flux:w_div_ts_cov - rand_err_co2_flux:co2_mixing_ratio - 
+            co2_molar_density:co2_mole_fraction - co2_molar_density:co2_mixing_ratio - co2_molar_density:un_H - co2_molar_density:un_co2_flux - co2_molar_density:w_div_ts_cov - 
+            co2_molar_density:co2...125 - co2_mole_fraction:co2_mixing_ratio - co2_mole_fraction:un_H - co2_mole_fraction:un_co2_flux - 
+            co2_mole_fraction:w_div_ts_cov - co2_mole_fraction:T_star_  - co2_mole_fraction:co2...125 - co2_mixing_ratio:T_star_ - T_star_:w_div_ts_cov -
+            co2_mixing_ratio:un_H - co2_mixing_ratio:un_co2_flux - co2_mixing_ratio:w_div_ts_cov - co2_mixing_ratio:co2...125 - 
+            T_star_:co2...125 - un_H:un_co2_flux - un_H:w_div_ts_cov - un_co2_flux:w_div_ts_cov - un_co2_flux:co2...125 - 
+            w_div_ts_cov:co2...125, data = teaching_tbl)
+coef(model8)
+resid(model8)
+confint(model8)
+резюме (модель 8)
+anova(модель 8)
+anova(модель 7, модель 8)
+
+#модель номер 8 является оптимальной
